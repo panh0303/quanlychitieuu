@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Thu Chi Cá Nhân</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .warning {
+            border-left: 4px solid #ef4444;
+            background-color: #fef2f2;
+        }
+        .summary-card {
+            transition: all 0.3s ease;
+        }
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row justify-between items-start mb-8">
+            <div class="mb-4 md:mb-0">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-3xl font-bold text-gray-800">Quản Lý Thu Chi Cá Nhân</h1>
+                    <button id="resetAll" class="text-sm text-red-600 hover:text-red-800 hover:underline">Reset</button>
+                </div>
+                <p class="text-gray-600">Theo dõi thu nhập và chi tiêu hằng ngày</p>
+                <div class="summary-card bg-white p-6 rounded-lg shadow mt-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Current Balance</h3>
+                    <p class="text-3xl font-bold text-emerald-600" id="currentBalance">0</p>
+                    <p class="text-sm text-gray-500">As of <span id="currentDate"></span></p>
+                </div>
+            </div>
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d4b6a385-3569-40c7-9be1-988db19d56ac.png" alt="Illustration of a financial dashboard with charts and graphs showing cash flow visualization" class="h-16"/>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="summary-card bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Income</h3>
+                <p class="text-3xl font-bold text-green-600" id="monthlyIncome">0</p>
+                <p class="text-sm text-gray-500">Total income</p>
+            </div>
+            <div class="summary-card bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Expenses</h3>
+                <p class="text-3xl font-bold text-red-600" id="monthlyExpenses">0</p>
+                <p class="text-sm text-gray-500">Total expenses</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Thêm Giao Dịch Mới</h2>
+            <form id="transactionForm" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-3">
+                    <label for="date" class="block text-sm font-medium text-gray-700">Ngày</label>
+                    <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                </div>
+                <div class="md:col-span-3">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Mô tả</label>
+                    <input type="text" id="description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="category" class="block text-sm font-medium text-gray-700">Danh mục</label>
+                    <select id="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        <option value="">Select category</option>
+                        <optgroup label="Thu Nhập">
+                            <option value="salary">Lương</option>
+                            <option value="bonus">Thưởng</option>
+                            <option value="side_income">Thu nhập phụ</option>
+                            <option value="investment">Lợi nhuận đầu tư</option>
+                        </optgroup>
+                        <optgroup label="Chi Tiêu">
+                            <option value="food">Ăn uống</option>
+                            <option value="transportation">Đi lại</option>
+                            <option value="shopping">Mua sắm</option>
+                            <option value="education">Học tập</option>
+                            <option value="investment">Đầu tư</option>
+                            <option value="entertainment">Giải trí</option>
+                            <option value="health">Sức khỏe</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+                    <input type="number" id="amount" min="0" step="1000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                </div>
+                <div class="md:col-span-2 flex items-end">
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Thêm</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Lịch Sử Giao Dịch</h2>
+                    <div class="flex space-x-2">
+                        <button id="filterDay" class="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200">Today</button>
+                        <button id="filterWeek" class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">This Week</button>
+                        <button id="filterMonth" class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">This Month</button>
+                        <button id="filterAll" class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">All</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô tả</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Danh mục</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số tiền (VND)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTable" class="bg-white divide-y divide-gray-200">
+                            <!-- Transactions will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Thống Kê Chi Tiêu</h2>
+                    <div class="h-64">
+                        <canvas id="expensesChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Đề Xuất Ngân Sách</h2>
+                    <div id="budgetRecommendations" class="space-y-3">
+                        <!-- Budget recommendations will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Tổng Hợp Hằng Ngày</h2>
+                <div class="h-64">
+                    <canvas id="dailySummaryChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Cảnh Báo</h2>
+                <div id="warningsContainer" class="space-y-3">
+                    <div class="p-3 rounded-md bg-blue-50">
+                        <p class="text-sm text-blue-800">Chưa phát hiện chi tiêu bất thường. Hãy thêm giao dịch để nhận cảnh báo.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize date
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            document.getElementById('date').valueAsDate = today;
+            document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // Load existing transactions from localStorage
+            loadTransactions();
+            updateCharts();
+            generateBudgetRecommendations();
+        });
+
+        let transactions = [];
+
+        // Form submission
+        document.getElementById('transactionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('date').value;
+            const description = document.getElementById('description').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const typeSelector = document.getElementById('category');
+            const type = typeSelector.querySelector('optgroup[label="Thu Nhập"]')?.contains(typeSelector.querySelector(`option[value="${category}"]:checked`)) ? 'Income' : 'Expense';
+            
+            const transaction = {
+                id: Date.now(),
+                date: date,
+                description: description,
+                category: category,
+                amount: amount,
+                type: type,
+                timestamp: new Date(date).getTime()
+            };
+            
+            transactions.push(transaction);
+            saveTransactions();
+            addTransactionToTable(transaction);
+            updateSummary();
+            updateCharts();
+            generateBudgetRecommendations();
+            checkForWarnings();
+            
+            // Reset form
+            document.getElementById('description').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('description').focus();
+        });
+
+        // Filter buttons
+        document.getElementById('filterDay').addEventListener('click', function() {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            filterTransactions(todayStr, todayStr);
+            this.classList.add('bg-indigo-100', 'text-indigo-700');
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterWeek').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterMonth').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterAll').classList.add('bg-gray-100', 'text-gray-700');
+        });
+
+        document.getElementById('filterWeek').addEventListener('click', function() {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            const weekStart = new Date(now.setDate(diff));
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            
+            filterTransactions(
+                weekStart.toISOString().split('T')[0],
+                weekEnd.toISOString().split('T')[0]
+            );
+            
+            this.classList.add('bg-indigo-100', 'text-indigo-700');
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterDay').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterMonth').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterAll').classList.add('bg-gray-100', 'text-gray-700');
+        });
+
+        document.getElementById('filterMonth').addEventListener('click', function() {
+            const now = new Date();
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            filterTransactions(
+                monthStart.toISOString().split('T')[0],
+                monthEnd.toISOString().split('T')[0]
+            );
+            
+            this.classList.add('bg-indigo-100', 'text-indigo-700');
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterDay').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterWeek').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterAll').classList.add('bg-gray-100', 'text-gray-700');
+        });
+
+        document.getElementById('filterAll').addEventListener('click', function() {
+            filterTransactions();
+            this.classList.add('bg-indigo-100', 'text-indigo-700');
+            this.classList.remove('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterDay').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterWeek').classList.add('bg-gray-100', 'text-gray-700');
+            document.getElementById('filterMonth').classList.add('bg-gray-100', 'text-gray-700');
+        });
+
+        function filterTransactions(startDate, endDate) {
+            const tbody = document.getElementById('transactionTable');
+            tbody.innerHTML = '';
+            
+            let filtered = transactions;
+            if (startDate && endDate) {
+                filtered = transactions.filter(transaction => {
+                    return transaction.date >= startDate && transaction.date <= endDate;
+                });
+            }
+            
+            filtered.forEach(transaction => {
+                addTransactionToTable(transaction);
+            });
+            
+            updateSummary();
+            updateCharts();
+        }
+
+        function addTransactionToTable(transaction) {
+            const tbody = document.getElementById('transactionTable');
+            const row = document.createElement('tr');
+            row.className = 'fade-in';
+            
+            // Check if this is an unusual expense
+            const isUnusual = checkIfUnusual(transaction);
+            if (isUnusual) {
+                row.classList.add('warning');
+            }
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(transaction.date)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.description}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatCategory(transaction.category)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm ${transaction.type === 'Income' ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}">${transaction.type === 'Income' ? '+' : '-'}${transaction.amount.toLocaleString()}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.type}</td>
+            `;
+            
+            tbody.appendChild(row);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function formatCategory(category) {
+            const categoryMap = {
+                'salary': 'Lương',
+                'bonus': 'Thưởng',
+                'side_income': 'Thu nhập phụ',
+                'investment': 'Đầu tư',
+                'food': 'Ăn uống',
+                'transportation': 'Đi lại', 
+                'shopping': 'Mua sắm',
+                'education': 'Học tập',
+                'entertainment': 'Giải trí',
+                'health': 'Sức khỏe'
+            };
+            return categoryMap[category] || category;
+        }
+
+        function saveTransactions() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        function loadTransactions() {
+            const saved = localStorage.getItem('transactions');
+            if (saved) {
+                transactions = JSON.parse(saved);
+                
+                // Sort by date (newest first)
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                const tbody = document.getElementById('transactionTable');
+                transactions.forEach(transaction => {
+                    addTransactionToTable(transaction);
+                });
+                
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            // Calculate current month totals
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const monthlyIncome = transactions
+                .filter(t => t.type === 'Income' && 
+                      new Date(t.date).getMonth() === currentMonth && 
+                      new Date(t.date).getFullYear() === currentYear)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const monthlyExpenses = transactions
+                .filter(t => t.type === 'Expense' && 
+                      new Date(t.date).getMonth() === currentMonth && 
+                      new Date(t.date).getFullYear() === currentYear)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            // Calculate total balance (all income minus all expenses)
+            let balance = transactions.reduce((total, t) => {
+                return total + (t.type === 'Income' ? t.amount : 0) - (t.type === 'Expense' ? t.amount : 0);
+            }, 0);
+            
+            // Calculate total income/expenses for display
+            const totalIncome = transactions
+                .filter(t => t.type === 'Income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalExpenses = transactions
+                .filter(t => t.type === 'Expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            // Update UI
+            document.getElementById('currentBalance').textContent = balance.toLocaleString();
+            document.getElementById('monthlyIncome').textContent = totalIncome.toLocaleString();
+            document.getElementById('monthlyExpenses').textContent = totalExpenses.toLocaleString();
+        }
+
+        function updateCharts() {
+            // Get current month transactions
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const monthlyExpenses = transactions
+                .filter(t => t.type === 'Expense' && 
+                      new Date(t.date).getMonth() === currentMonth && 
+                      new Date(t.date).getFullYear() === currentYear);
+            
+            // Group by category for pie chart
+            const expensesByCategory = {};
+            monthlyExpenses.forEach(t => {
+                if (!expensesByCategory[t.category]) {
+                    expensesByCategory[t.category] = 0;
+                }
+                expensesByCategory[t.category] += t.amount;
+            });
+            
+            // Prepare data for pie chart
+            const pieLabels = Object.keys(expensesByCategory).map(formatCategory);
+            const pieData = Object.values(expensesByCategory);
+            
+            // Pie chart (expenses by category)
+            const pieChartCtx = document.getElementById('expensesChart').getContext('2d');
+            if (window.pieChart) {
+                window.pieChart.destroy();
+            }
+            
+            if (pieLabels.length > 0) {
+                window.pieChart = new Chart(pieChartCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: pieLabels,
+                        datasets: [{
+                            data: pieData,
+                            backgroundColor: [
+                                '#3B82F6',
+                                '#EF4444',
+                                '#10B981',
+                                '#F59E0B',
+                                '#8B5CF6',
+                                '#EC4899',
+                                '#14B8A6'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Prepare data for daily summary chart (last 30 days)
+            const last30Days = new Date();
+            last30Days.setDate(last30Days.getDate() - 30);
+            
+            const dailyTransactions = {};
+            transactions.forEach(t => {
+                const date = t.date;
+                if (new Date(date) >= last30Days) {
+                    if (!dailyTransactions[date]) {
+                        dailyTransactions[date] = { income: 0, expense: 0 };
+                    }
+                    
+                    if (t.type === 'Income') {
+                        dailyTransactions[date].income += t.amount;
+                    } else {
+                        dailyTransactions[date].expense += t.amount;
+                    }
+                }
+            });
+            
+            // Sort by date and fill in missing days
+            const sortedDates = Object.keys(dailyTransactions).sort();
+            const minDate = sortedDates.length > 0 ? sortedDates[0] : new Date().toISOString().split('T')[0];
+            const dateArray = [];
+            
+            for (let d = new Date(minDate); d <= new Date(); d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+                dateArray.push(dateStr);
+                
+                if (!dailyTransactions[dateStr]) {
+                    dailyTransactions[dateStr] = { income: 0, expense: 0 };
+                }
+            }
+            
+            const dailyIncome = dateArray.map(date => dailyTransactions[date].income);
+            const dailyExpense = dateArray.map(date => dailyTransactions[date].expense);
+            
+            // Daily summary chart
+            const dailyChartCtx = document.getElementById('dailySummaryChart').getContext('2d');
+            if (window.dailyChart) {
+                window.dailyChart.destroy();
+            }
+            
+            window.dailyChart = new Chart(dailyChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: dateArray.map(date => formatDate(date)),
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: dailyIncome,
+                            backgroundColor: '#10B981',
+                            borderColor: '#10B981',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Expense',
+                            data: dailyExpense,
+                            backgroundColor: '#EF4444',
+                            borderColor: '#EF4444',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: false,
+                        },
+                        y: {
+                            stacked: false,
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateBudgetRecommendations() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            // Get last 3 months of expense data
+            const monthsToAnalyze = 3;
+            const startDate = new Date(currentYear, currentMonth - monthsToAnalyze, 1);
+            
+            const historicalExpenses = transactions
+                .filter(t => t.type === 'Expense' && new Date(t.date) >= startDate);
+            
+            // Calculate average spending by category
+            const categoryAverages = {};
+            historicalExpenses.forEach(t => {
+                if (!categoryAverages[t.category]) {
+                    categoryAverages[t.category] = {
+                        total: 0,
+                        count: 0
+                    };
+                }
+                categoryAverages[t.category].total += t.amount;
+                categoryAverages[t.category].count += 1;
+            });
+            
+            for (const category in categoryAverages) {
+                if (categoryAverages[category].count > 0) {
+                    categoryAverages[category].average = Math.round(categoryAverages[category].total / categoryAverages[category].count);
+                }
+            }
+            
+            // Generate recommendations
+            const recommendationsContainer = document.getElementById('budgetRecommendations');
+            recommendationsContainer.innerHTML = '';
+            
+            if (Object.keys(categoryAverages).length === 0) {
+                recommendationsContainer.innerHTML = '<p class="text-sm text-gray-500">Add more expense data to generate budget recommendations.</p>';
+                return;
+            }
+            
+            for (const category in categoryAverages) {
+                const avg = categoryAverages[category].average;
+                const rec = Math.round(avg * 0.9); // Suggest 90% of average
+                
+                const recElement = document.createElement('div');
+                recElement.className = 'flex justify-between items-center';
+                recElement.innerHTML = `
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-gray-700">${formatCategory(category)}</h4>
+                        <p class="text-xs text-gray-500">Average: ${avg.toLocaleString()}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-900">Budget: ${rec.toLocaleString()}</p>
+                    </div>
+                `;
+                
+                recommendationsContainer.appendChild(recElement);
+            }
+        }
+
+        function checkForWarnings() {
+            const warningsContainer = document.getElementById('warningsContainer');
+            warningsContainer.innerHTML = '';
+            
+            // Check for unusual spending (2x average)
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const monthlyExpenses = transactions
+                .filter(t => t.type === 'Expense' && 
+                      new Date(t.date).getMonth() === currentMonth && 
+                      new Date(t.date).getFullYear() === currentYear);
+            
+            // Group by category
+            const categoryTotals = {};
+            monthlyExpenses.forEach(t => {
+                if (!categoryTotals[t.category]) {
+                    categoryTotals[t.category] = 0;
+                }
+                categoryTotals[t.category] += t.amount;
+            });
+            
+            // Calculate historical averages
+            const monthsToAnalyze = 3;
+            const startDate = new Date(currentYear, currentMonth - monthsToAnalyze, 1);
+            
+            const historicalExpenses = transactions
+                .filter(t => t.type === 'Expense' && new Date(t.date) >= startDate);
+            
+            const categoryAverages = {};
+            historicalExpenses.forEach(t => {
+                if (!categoryAverages[t.category]) {
+                    categoryAverages[t.category] = {
+                        total: 0,
+                        count: 0
+                    };
+                }
+                categoryAverages[t.category].total += t.amount;
+                categoryAverages[t.category].count += 1;
+            });
+            
+            for (const category in categoryAverages) {
+                if (categoryAverages[category].count > 0) {
+                    categoryAverages[category].average = categoryAverages[category].total / categoryAverages[category].count;
+                }
+            }
+            
+            // Check for unusual spending
+            let hasWarnings = false;
+            
+            for (const category in categoryTotals) {
+                if (categoryAverages[category] && categoryAverages[category].average) {
+                    const currentTotal = categoryTotals[category];
+                    const historicalAvg = categoryAverages[category].average;
+                    
+                    if (currentTotal > historicalAvg * 2) {
+                        const warningElement = document.createElement('div');
+                        warningElement.className = 'p-3 rounded-md bg-red-50';
+                        warningElement.innerHTML = `
+                            <p class="text-sm font-medium text-red-800">
+                                Chi tiêu cao bất thường cho ${formatCategory(category)}!<br>
+                                Bạn đã chi ${currentTotal.toLocaleString()} tháng này, cao hơn nhiều so với mức trung bình ${historicalAvg.toLocaleString()}.
+                            </p>
+                        `;
+                        warningsContainer.appendChild(warningElement);
+                        hasWarnings = true;
+                    }
+                }
+            }
+            
+            if (!hasWarnings) {
+                const noWarningElement = document.createElement('div');
+                noWarningElement.className = 'p-3 rounded-md bg-blue-50';
+                noWarningElement.innerHTML = '<p class="text-sm text-blue-800">No unusual spending detected.</p>';
+                warningsContainer.appendChild(noWarningElement);
+            }
+        }
+
+        function resetAllTransactions() {
+            if(confirm('Bạn có chắc chắn muốn đặt lại tất cả dữ liệu về 0?')) {
+                transactions = [];
+                localStorage.removeItem('transactions');
+                document.getElementById('transactionTable').innerHTML = '';
+                updateSummary();
+                updateCharts();
+                generateBudgetRecommendations();
+                
+                const warningsContainer = document.getElementById('warningsContainer');
+                warningsContainer.innerHTML = `
+                    <div class="p-3 rounded-md bg-blue-50">
+                        <p class="text-sm text-blue-800">Đã đặt lại toàn bộ dữ liệu về 0.</p>
+                    </div>`;
+            }
+        }
+
+        // Add event listener for reset button
+        document.getElementById('resetAll').addEventListener('click', resetAllTransactions);
+
+        function checkIfUnusual(transaction) {
+            if (transaction.type !== 'Expense') return false;
+            
+            const category = transaction.category;
+            const amount = transaction.amount;
+            
+            // Get historical average for this category
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const monthsToAnalyze = 3;
+            const startDate = new Date(currentYear, currentMonth - monthsToAnalyze, 1);
+            
+            const historicalExpenses = transactions
+                .filter(t => t.type === 'Expense' && 
+                      t.category === category && 
+                      new Date(t.date) >= startDate);
+            
+            if (historicalExpenses.length < 3) return false; // Not enough data
+            
+            const avgAmount = historicalExpenses.reduce((sum, t) => sum + t.amount, 0) / historicalExpenses.length;
+            
+            // If this transaction is 3x the average, consider it unusual
+            return amount > avgAmount * 3;
+        }
+    </script>
+</body>
+</html>
